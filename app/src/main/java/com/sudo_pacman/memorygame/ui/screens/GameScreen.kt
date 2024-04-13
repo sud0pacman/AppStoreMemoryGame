@@ -25,8 +25,11 @@ import com.sudo_pacman.memorygame.utils.closeImage
 import com.sudo_pacman.memorygame.utils.hideAnim
 import com.sudo_pacman.memorygame.utils.myLog
 import com.sudo_pacman.memorygame.utils.openImage
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 
 class GameScreen : Fragment(R.layout.screen_game) {
@@ -43,11 +46,43 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private var findCards = 0
     private var canClick = true
     private lateinit var level: LevelEnum
+    private lateinit var job: Job
+    private lateinit var progressJob: Job
+    private var i: Int = 0
+    private val MAX_TIME by lazy {
+        when (level) {
+            LevelEnum.EASY -> 100
+            LevelEnum.MEDIUM -> 200
+            LevelEnum.HARD -> 300
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
 
         level = navArgs.level
+
+        i =
+            if (level == LevelEnum.EASY) 100
+            else if (level == LevelEnum.MEDIUM) 200
+            else 300
+
+        binding.time.text = i.toString()
+
+        val progressBar = binding.horizontalProgressBar
+        progressBar.max = i
+        job = lifecycleScope.launch {
+            while (i > 0) {
+                progressBar.progress = i
+                i--
+                binding.time.text = i.toString()
+                if (i == 0) {
+                    Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
+                    showGameOverDialog()
+                }
+                delay(1000L)
+            }
+        }
 
         // ekran chizildi
         binding.container.post {
@@ -90,6 +125,10 @@ class GameScreen : Fragment(R.layout.screen_game) {
 //        binding.menu.setOnClickListener {
 //            findNavController().popBackStack()
 //        }
+    }
+
+    private fun showGameOverDialog() {
+
     }
 
     private fun loadViews(images: List<CardData>) {
