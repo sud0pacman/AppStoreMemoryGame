@@ -6,4 +6,9 @@
     <string name="easy">Easy</string>
     <string name="medium">Medium</string>
     <string name="hard">Hard</string>
+    <string name="level">Level :</string>
+    <string name="attempts">Attempts:</string>
+    <string name="completed">Completed</string>
+    <string name="next">Next</string>
+    <string name="home">Home</string>
 </resources>

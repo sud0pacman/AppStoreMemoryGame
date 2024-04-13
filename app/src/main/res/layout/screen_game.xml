@@ -15,7 +15,7 @@
         android:background="@drawable/bg_time"
         android:minHeight="40dp"
         android:minWidth="60dp"
-        app:layout_constraintStart_toEndOf="@id/home"
+        app:layout_constraintStart_toEndOf="@id/menu"
         app:layout_constraintEnd_toStartOf="@id/reload"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginVertical="24dp"
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         app:layout_constraintEnd_toStartOf="@id/reload"
-        app:layout_constraintStart_toEndOf="@id/home"
+        app:layout_constraintStart_toEndOf="@id/menu"
         app:layout_constraintTop_toBottomOf="@id/time"
         android:layout_marginTop="12dp"
         android:progress="50"
@@ -41,7 +41,7 @@
 
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/home"
+        android:id="@+id/menu"
         android:layout_width="48dp"
         android:layout_height="52dp"
         android:layout_margin="24dp"
@@ -70,8 +70,10 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/reload"
-        android:layout_width="48dp"
-        android:layout_height="52dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="48dp"
+        android:minHeight="52dp"
         android:layout_margin="24dp"
         android:clipChildren="false"
         android:clipToPadding="false"
@@ -85,13 +87,19 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="51dp"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:minHeight="51dp"
             android:background="@drawable/bg_blue"
-            android:gravity="top"
+            android:gravity="center"
             android:padding="10dp"
-            android:src="@drawable/ic_restart" />
+            android:textColor="@color/white"
+            android:fontFamily="@font/rubik_extra_bold"
+            android:textSize="18sp"
+            android:text="1"
+            />
 
     </androidx.cardview.widget.CardView>
 

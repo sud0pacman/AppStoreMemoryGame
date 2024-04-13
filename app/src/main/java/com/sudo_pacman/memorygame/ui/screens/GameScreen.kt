@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.sudo_pacman.memorygame.data.model.CardData
@@ -47,15 +48,8 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private var canClick = true
     private lateinit var level: LevelEnum
     private lateinit var job: Job
-    private lateinit var progressJob: Job
     private var i: Int = 0
-    private val MAX_TIME by lazy {
-        when (level) {
-            LevelEnum.EASY -> 100
-            LevelEnum.MEDIUM -> 200
-            LevelEnum.HARD -> 300
-        }
-    }
+    private var levelInt = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
@@ -116,15 +110,15 @@ class GameScreen : Fragment(R.layout.screen_game) {
         viewModel.hide.observe(viewLifecycleOwner, hideObserver)
         viewModel.hideWithAnim.observe(viewLifecycleOwner, hideWithAnimObserver)
 
-//        binding.reload.setOnClickListener {
-//            binding.container.removeAllViews()
-//            viewModel.restartGame()
-//            viewModel.loadImages(level)
-//        }
-//
-//        binding.menu.setOnClickListener {
-//            findNavController().popBackStack()
-//        }
+        binding.reload.setOnClickListener {
+            binding.container.removeAllViews()
+            viewModel.restartGame()
+            viewModel.loadImages(level)
+        }
+
+        binding.menu.setOnClickListener {
+            findNavController().popBackStack()
+        }
     }
 
     private fun showGameOverDialog() {
@@ -147,7 +141,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
                     availableCardWidth.toInt()
                 )
 
-                image.setPadding(20, 30, 20, 30,)
+                image.setPadding(20, 30, 20, 30)
 
                 image.layoutParams = lp
 

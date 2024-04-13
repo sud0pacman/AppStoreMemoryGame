@@ -4,4 +4,7 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="frame">#C2A5FF</color>
+    <color name="blue_500">#350189</color>
+    <color name="yellow_500">#EFD23E</color>
+    <color name="purple_500">#7428EE</color>
 </resources>

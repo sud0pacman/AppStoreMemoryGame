@@ -1,7 +1,10 @@
 package com.sudo_pacman.memorygame.ui.screens
 
+import android.app.Dialog
+import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Shader
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -101,6 +104,7 @@ class LevelScreen : Fragment(R.layout.screen_level) {
                 }
             }
         }
+
     }
 }
 
