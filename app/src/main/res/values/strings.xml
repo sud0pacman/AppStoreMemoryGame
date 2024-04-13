@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">MemoryGame</string>
+    <string name="memory">MEMORY</string>
+    <string name="game">GAME</string>
+    <string name="game_title">PICTURE PUZZLE</string>
+    <string name="easy">Easy</string>
+    <string name="medium">Medium</string>
+    <string name="hard">Hard</string>
+</resources>
