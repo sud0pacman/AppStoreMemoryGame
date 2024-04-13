@@ -1,5 +1,8 @@
 package com.sudo_pacman.memorygame.ui.screens
 
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -49,34 +52,14 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private lateinit var level: LevelEnum
     private lateinit var job: Job
     private var i: Int = 0
-    private var levelInt = 0
+    private var levelInt = 1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
 
         level = navArgs.level
 
-        i =
-            if (level == LevelEnum.EASY) 100
-            else if (level == LevelEnum.MEDIUM) 200
-            else 300
-
-        binding.time.text = i.toString()
-
-        val progressBar = binding.horizontalProgressBar
-        progressBar.max = i
-        job = lifecycleScope.launch {
-            while (i > 0) {
-                progressBar.progress = i
-                i--
-                binding.time.text = i.toString()
-                if (i == 0) {
-                    Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
-                    showGameOverDialog()
-                }
-                delay(1000L)
-            }
-        }
+        timerInitAndStart()
 
         // ekran chizildi
         binding.container.post {
@@ -119,10 +102,32 @@ class GameScreen : Fragment(R.layout.screen_game) {
         binding.menu.setOnClickListener {
             findNavController().popBackStack()
         }
+
+        binding.level.text = "$levelInt"
     }
 
     private fun showGameOverDialog() {
+        val dialog = Dialog(requireContext())
 
+        dialog.setContentView(R.layout.dialog_win)
+
+        dialog.setCancelable(false)
+
+        dialog.findViewById<LinearLayout>(R.id.home).setOnClickListener {
+            dialog.dismiss()
+            findNavController().navigateUp()
+
+        }
+        dialog.getWindow()?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
+            dialog.dismiss()
+
+            binding.container.removeAllViews()
+            viewModel.restartGame()
+            viewModel.loadImages(level)
+        }
+
+        dialog.show()
     }
 
     private fun loadViews(images: List<CardData>) {
@@ -166,6 +171,32 @@ class GameScreen : Fragment(R.layout.screen_game) {
         }
 
         clickEvent()
+    }
+
+
+    private fun timerInitAndStart() {
+        i =
+            if (level == LevelEnum.EASY) 100
+            else if (level == LevelEnum.MEDIUM) 200
+            else 300
+
+        binding.time.text = i.toString()
+
+        val progressBar = binding.horizontalProgressBar
+        progressBar.max = i
+
+        job = lifecycleScope.launch {
+            while (i > 0) {
+                i--
+                progressBar.progress = i
+                binding.time.text = i.toString()
+                if (i == 0) {
+                    Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
+                    showGameOverDialog()
+                }
+                delay(1000L)
+            }
+        }
     }
 
     private fun clickEvent() {
@@ -215,6 +246,9 @@ class GameScreen : Fragment(R.layout.screen_game) {
         views[index].hideAnim {
             canClick = true
             ++findCards
+
+            "findcard -> $findCards,  x*y=${x*y}".myLog()
+
             isFinish()
 
             val handler = Handler(Looper.getMainLooper())
@@ -224,13 +258,19 @@ class GameScreen : Fragment(R.layout.screen_game) {
                     isFocusableInTouchMode = false
                     isFocusable = false
                 }
-            }, 100) // Adjust the delay time as needed
+            }, 50) // Adjust the delay time as needed
         }
     }
 
 
     private fun isFinish() {
-        if (findCards == x * y)
+        if (findCards == (x * y) / 2)  {
+            job.cancel()
+
+            ++levelInt
+            binding.level.text = "$levelInt"
+            showGameOverDialog()
             Toast.makeText(requireContext(), "Finish", Toast.LENGTH_SHORT).show()
+        }
     }
 }
