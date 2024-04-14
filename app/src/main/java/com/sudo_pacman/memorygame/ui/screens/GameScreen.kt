@@ -4,14 +4,19 @@ import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -37,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.properties.Delegates
 
 
 class GameScreen : Fragment(R.layout.screen_game) {
@@ -62,7 +68,18 @@ class GameScreen : Fragment(R.layout.screen_game) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
 
+        requireActivity().window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        setupOnBackPressed()
+
         level = navArgs.level
+
+        i =
+            when (level) {
+                LevelEnum.EASY -> 100
+                LevelEnum.MEDIUM -> 200
+                else -> 300
+            }
+
 
         timerInitAndStart()
         playerSet()
@@ -150,7 +167,24 @@ class GameScreen : Fragment(R.layout.screen_game) {
                     availableCardWidth.toInt()
                 )
 
-                image.setPadding(20, 30, 20, 30)
+                var paddingVertical = 30
+                var paddingHorizontal = 20
+
+                when (level) {
+                    LevelEnum.EASY -> {
+                        paddingHorizontal = 50
+                        paddingVertical = 40
+                    }
+
+                    LevelEnum.MEDIUM -> {
+                        paddingHorizontal = 40
+                        paddingVertical = 30
+                    }
+
+                    else -> {}
+                }
+
+                image.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
 
                 image.layoutParams = lp
 
@@ -178,10 +212,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
     }
 
     private fun timerInitAndStart() {
-        i =
-            if (level == LevelEnum.EASY) 100
-            else if (level == LevelEnum.MEDIUM) 200
-            else 300
 
         binding.time.text = i.toString()
 
@@ -216,6 +246,8 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private fun showGameOverDialog() {
         val dialog = Dialog(requireContext())
 
+        binding.container.removeAllViews()
+
         dialog.setContentView(R.layout.dialog_win)
 
         dialog.setCancelable(false)
@@ -234,7 +266,15 @@ class GameScreen : Fragment(R.layout.screen_game) {
         dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
             dialog.dismiss()
 
-            binding.container.removeAllViews()
+//            binding.container.removeAllViews()
+
+            i =
+                when (level) {
+                    LevelEnum.EASY -> 100
+                    LevelEnum.MEDIUM -> 200
+                    else -> 300
+                }
+
             viewModel.restartGame()
             viewModel.loadImages(level)
             timerInitAndStart()
@@ -321,4 +361,40 @@ class GameScreen : Fragment(R.layout.screen_game) {
         MyPref.getInstance().saveLevel(level, levelInt)
         super.onStop()
     }
+
+    private fun setupOnBackPressed() {
+        val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+
+                job.cancel()
+
+                val dialog = Dialog(requireContext())
+
+                dialog.setContentView(R.layout.dialog_exit)
+
+                dialog.setCancelable(false)
+
+
+
+                dialog.findViewById<TextView>(R.id.yes_exit).setOnClickListener {
+                    dialog.dismiss()
+                    findNavController().navigateUp()
+                }
+
+                dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+                dialog.window?.attributes?.gravity = Gravity.CENTER
+
+                dialog.findViewById<TextView>(R.id.no_exit).setOnClickListener {
+                    timerInitAndStart()
+                    dialog.dismiss()
+                }
+
+                dialog.show()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
+    }
+
+
 }
