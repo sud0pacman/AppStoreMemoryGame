@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/levelScreen">
+    app:startDestination="@id/screenSplash">
 
     <fragment
         android:id="@+id/levelScreen"
@@ -14,6 +14,7 @@
             android:id="@+id/action_levelScreen_to_gameScreen"
             app:destination="@id/gameScreen" />
     </fragment>
+
     <fragment
         android:id="@+id/gameScreen"
         android:name="com.sudo_pacman.memorygame.ui.screens.GameScreen"
@@ -23,5 +24,15 @@
             android:name="level"
             app:argType="com.sudo_pacman.memorygame.data.model.LevelEnum"
             />
+    </fragment>
+
+    <fragment
+        android:id="@+id/screenSplash"
+        android:name="com.sudo_pacman.memorygame.ui.splash.ScreenSplash"
+        android:label="ScreenSplash"
+        tools:layout="@layout/screen_splash">
+        <action
+            android:id="@+id/action_screenSplash_to_levelScreen"
+            app:destination="@id/levelScreen" />
     </fragment>
 </navigation>
