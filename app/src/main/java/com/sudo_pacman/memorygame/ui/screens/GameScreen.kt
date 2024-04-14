@@ -229,6 +229,8 @@ class GameScreen : Fragment(R.layout.screen_game) {
         }
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+
         dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
             dialog.dismiss()
 
