@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
@@ -25,6 +26,8 @@ import com.sudo_pacman.memorygame.ui.viewmodel.factory.GameViewModelFactory
 import com.sudo_pacman.memorygame.ui.viewmodel.impl.GameViewModelImpl
 import com.sudo_pacman.memorygame.R
 import com.sudo_pacman.memorygame.databinding.ScreenGameBinding
+import com.sudo_pacman.memorygame.utils.MyMusicPlayer
+import com.sudo_pacman.memorygame.utils.MyPref
 import com.sudo_pacman.memorygame.utils.closeImage
 import com.sudo_pacman.memorygame.utils.hideAnim
 import com.sudo_pacman.memorygame.utils.myLog
@@ -53,6 +56,8 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private lateinit var job: Job
     private var i: Int = 0
     private var levelInt = 1
+    private var attempts = 0
+    private lateinit var player: MyMusicPlayer
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
@@ -60,6 +65,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
         level = navArgs.level
 
         timerInitAndStart()
+        playerSet()
 
         // ekran chizildi
         binding.container.post {
@@ -97,37 +103,35 @@ class GameScreen : Fragment(R.layout.screen_game) {
             binding.container.removeAllViews()
             viewModel.restartGame()
             viewModel.loadImages(level)
+            timerInitAndStart()
         }
 
         binding.menu.setOnClickListener {
             findNavController().popBackStack()
         }
 
-        binding.level.text = "$levelInt"
+        binding.level.text = "${MyPref.getInstance().getLevel(level)}"
+        levelInt = MyPref.getInstance().getLevel(level)
     }
 
-    private fun showGameOverDialog() {
-        val dialog = Dialog(requireContext())
+    private fun playerSet() {
+        player = MyMusicPlayer.getInstance()
+        val pref = MyPref.getInstance()
 
-        dialog.setContentView(R.layout.dialog_win)
-
-        dialog.setCancelable(false)
-
-        dialog.findViewById<LinearLayout>(R.id.home).setOnClickListener {
-            dialog.dismiss()
-            findNavController().navigateUp()
-
+        if (pref.getMusicState()) {
+            binding.volume.setImageResource(R.drawable.sound_on)
+        } else {
+            binding.volume.setImageResource(R.drawable.sound_off)
         }
-        dialog.getWindow()?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
-            dialog.dismiss()
-
-            binding.container.removeAllViews()
-            viewModel.restartGame()
-            viewModel.loadImages(level)
+        binding.containerVolume.setOnClickListener {
+            if (pref.getMusicState()) {
+                player.manageMusic()
+                binding.volume.setImageResource(R.drawable.sound_off)
+            } else {
+                player.manageMusic()
+                binding.volume.setImageResource(R.drawable.sound_on)
+            }
         }
-
-        dialog.show()
     }
 
     private fun loadViews(images: List<CardData>) {
@@ -173,7 +177,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
         clickEvent()
     }
 
-
     private fun timerInitAndStart() {
         i =
             if (level == LevelEnum.EASY) 100
@@ -193,11 +196,13 @@ class GameScreen : Fragment(R.layout.screen_game) {
                 if (i == 0) {
                     Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
                     showGameOverDialog()
+                    job.cancel()
                 }
                 delay(1000L)
             }
         }
     }
+
 
     private fun clickEvent() {
         views.forEachIndexed { index, imageView ->
@@ -208,12 +213,42 @@ class GameScreen : Fragment(R.layout.screen_game) {
         }
     }
 
+    private fun showGameOverDialog() {
+        val dialog = Dialog(requireContext())
+
+        dialog.setContentView(R.layout.dialog_win)
+
+        dialog.setCancelable(false)
+
+        dialog.findViewById<TextView>(R.id.level).text = "$levelInt"
+        dialog.findViewById<TextView>(R.id.attempts).text = "$attempts"
+
+        dialog.findViewById<LinearLayout>(R.id.home).setOnClickListener {
+            dialog.dismiss()
+            findNavController().navigateUp()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
+            dialog.dismiss()
+
+            binding.container.removeAllViews()
+            viewModel.restartGame()
+            viewModel.loadImages(level)
+            timerInitAndStart()
+        }
+
+        dialog.show()
+    }
+
 
     private val openObserver = Observer<Int> {
+        player.startOpenCardMusic()
         views[it].openImage()
     }
 
     private val openWithActionObserver = Observer<Int> {
+        player.startOpenCardMusic()
         views[it].openImage {
             canClick = false
         }
@@ -225,7 +260,10 @@ class GameScreen : Fragment(R.layout.screen_game) {
     }
 
     private val closeWithActionObserver = Observer<Int> {
+        player.startCloseCardMusic()
+
         views[it].closeImage {
+            ++attempts
             canClick = true
         }
     }
@@ -243,11 +281,14 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
 
     private val hideWithAnimObserver = Observer<Int> { index ->
+        player.startRemoveCardMusic()
+
         views[index].hideAnim {
             canClick = true
+            ++attempts
             ++findCards
 
-            "findcard -> $findCards,  x*y=${x*y}".myLog()
+            "findcard -> $findCards,  x*y=${x * y}".myLog()
 
             isFinish()
 
@@ -264,7 +305,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
 
     private fun isFinish() {
-        if (findCards == (x * y) / 2)  {
+        if (findCards == (x * y) / 2) {
             job.cancel()
 
             ++levelInt
@@ -272,5 +313,10 @@ class GameScreen : Fragment(R.layout.screen_game) {
             showGameOverDialog()
             Toast.makeText(requireContext(), "Finish", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onStop() {
+        MyPref.getInstance().saveLevel(level, levelInt)
+        super.onStop()
     }
 }
