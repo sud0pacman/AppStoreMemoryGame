@@ -31,8 +31,12 @@
         android:name="com.sudo_pacman.memorygame.ui.splash.ScreenSplash"
         android:label="ScreenSplash"
         tools:layout="@layout/screen_splash">
+
         <action
             android:id="@+id/action_screenSplash_to_levelScreen"
-            app:destination="@id/levelScreen" />
+            app:destination="@id/levelScreen"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true"
+             />
     </fragment>
 </navigation>
