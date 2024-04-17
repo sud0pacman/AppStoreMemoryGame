@@ -100,7 +100,7 @@ fun ImageView.closeImage(endAnim: () -> Unit) {
 
 fun ImageView.hideAnim() {
     this.animate()
-        .setDuration(1000)
+        .setDuration(500)
         .alpha(0.5f)
 //        .scaleX(0f)
 //        .scaleY(0f)
@@ -109,7 +109,7 @@ fun ImageView.hideAnim() {
 
 fun ImageView.hideAnim(endAnim: () -> Unit) {
     this.animate()
-        .setDuration(1000)
+        .setDuration(500)
         .alpha(0.5f)
 //        .scaleX(0f)
 //        .scaleY(0f)
