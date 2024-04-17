@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_screen_game"
+    android:id="@+id/root"
     tools:context="com.sudo_pacman.memorygame.ui.screens.GameScreen">
 
 

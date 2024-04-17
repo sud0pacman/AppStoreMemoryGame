@@ -99,7 +99,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
         viewModel.images.onEach {
             progressInit()
             loadViews(it)
-            delay(5000)
+            delay(4000)
             clickEvent()
             timerInitAndStart()
         }
@@ -196,12 +196,12 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
                 image.animate()
                     .setDuration(1000)
-                    .x((i * cardWidth) + (margin / 2))
-                    .y((j * cardHeight) + (margin / 2))
+                    .x((i * cardWidth) + (margin / 2) + binding.space.x)
+                    .y((j * cardHeight) + (margin / 2) + binding.space.y)
                     .withEndAction {
                         image.openImage {
                             lifecycleScope.launch {
-                                delay(1500L)
+                                delay(1200L)
                                 image.closeImage()
                                 image.isEnabled = true
                             }
@@ -210,7 +210,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
                 image.setImageResource(R.drawable.quiz)
 
-                binding.container.addView(image)
+                binding.root.addView(image)
 
                 image.tag = images[i * level.columnCount + j]
 

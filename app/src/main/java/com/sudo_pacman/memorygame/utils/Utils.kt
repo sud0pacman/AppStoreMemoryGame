@@ -23,14 +23,14 @@ fun ImageView.animateBounce() {
 
 fun ImageView.openImage() {
     animate()
-        .setDuration(500)
+        .setDuration(350)
         .rotationY(89f)
         .withEndAction {
             setImageResource((this.tag as CardData).resID)
             rotationY = -89f
 
             animate()
-                .setDuration(500)
+                .setDuration(350)
                 .rotationY(0f)
                 .withEndAction {
                 }
@@ -41,14 +41,14 @@ fun ImageView.openImage() {
 
 fun ImageView.openImage(endAnim: () -> Unit) {
     animate()
-        .setDuration(500)
+        .setDuration(350)
         .rotationY(89f)
         .withEndAction {
             setImageResource((this.tag as CardData).resID)
             rotationY = -89f
 
             animate()
-                .setDuration(500)
+                .setDuration(350)
                 .rotationY(0f)
                 .withEndAction {
                     endAnim.invoke()
@@ -61,14 +61,14 @@ fun ImageView.openImage(endAnim: () -> Unit) {
 fun ImageView.closeImage() {
     this.apply {
         animate()
-            .setDuration(500)
+            .setDuration(350)
             .rotationY(89f)
             .withEndAction {
                 setImageResource(R.drawable.quiz)
                 rotationY = -89f
 
                 animate()
-                    .setDuration(500)
+                    .setDuration(350)
                     .rotationY(0f)
                     .withEndAction {
                     }
@@ -81,14 +81,14 @@ fun ImageView.closeImage() {
 
 fun ImageView.closeImage(endAnim: () -> Unit) {
     animate()
-        .setDuration(500)
+        .setDuration(350)
         .rotationY(89f)
         .withEndAction {
             setImageResource(R.drawable.quiz)
             rotationY = -89f
 
             animate()
-                .setDuration(500)
+                .setDuration(350)
                 .rotationY(0f)
                 .withEndAction {
                     endAnim.invoke()
@@ -121,7 +121,7 @@ fun ImageView.hideAnim(endAnim: () -> Unit) {
 fun ConstraintLayout.clickLevelButton(click: () -> Unit) {
     this.animate()
         .scaleX(0.7f)
-        .setDuration(200)
+        .setDuration(350)
         .scaleY(0.7f)
         .withEndAction {
             this.animate()
