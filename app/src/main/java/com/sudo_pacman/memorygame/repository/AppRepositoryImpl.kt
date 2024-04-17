@@ -21,21 +21,31 @@ class AppRepositoryImpl private constructor() : AppRepository {
     }
 
     private val images: ArrayList<CardData> = ArrayList()
-    private val result = ArrayList<CardData>()
+    private var result = ArrayList<CardData>()
 
     init {
         initImages()
     }
 
     override fun getImagesByLevel(level: LevelEnum): Flow<List<CardData>> = flow {
-
         val count = level.rowCount * level.columnCount / 2
 
-        result.addAll(images.subList(0, count))
-        result.addAll(images.subList(0, count))
-//        result.shuffle()
+        val ls = images.subList(0, count)
+        val result = ArrayList<CardData>(ls)
+        result.addAll(ls)
 
+        result.shuffle()
         emit(result)
+
+//        val shuffledImages = images
+//
+//        val count = level.rowCount * level.columnCount / 2
+//
+//        result.addAll(shuffledImages.subList(0, count))
+//        result.addAll(shuffledImages.subList(0, count))
+//        result = result.shuffled() as ArrayList<CardData>
+//
+//        emit(result)
     }.flowOn(Dispatchers.IO)
 
 

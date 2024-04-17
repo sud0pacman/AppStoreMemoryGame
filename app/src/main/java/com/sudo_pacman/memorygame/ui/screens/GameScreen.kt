@@ -4,16 +4,13 @@ import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -42,7 +39,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 
 class GameScreen : Fragment(R.layout.screen_game) {
@@ -60,7 +56,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private var canClick = true
     private lateinit var level: LevelEnum
     private lateinit var job: Job
-    private var i: Int = 0
+    private var timeTotal: Int = 0
     private var levelInt = 1
     private var attempts = 0
     private lateinit var player: MyMusicPlayer
@@ -68,20 +64,18 @@ class GameScreen : Fragment(R.layout.screen_game) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
 
-        requireActivity().window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+//        requireActivity().window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setupOnBackPressed()
 
         level = navArgs.level
 
-        i =
+        timeTotal =
             when (level) {
                 LevelEnum.EASY -> 100
                 LevelEnum.MEDIUM -> 200
                 else -> 300
             }
 
-
-        timerInitAndStart()
         playerSet()
 
         // ekran chizildi
@@ -103,7 +97,11 @@ class GameScreen : Fragment(R.layout.screen_game) {
         }
 
         viewModel.images.onEach {
+            progressInit()
             loadViews(it)
+            delay(5000)
+            clickEvent()
+            timerInitAndStart()
         }
             .launchIn(lifecycleScope)
 
@@ -117,19 +115,20 @@ class GameScreen : Fragment(R.layout.screen_game) {
         viewModel.hideWithAnim.observe(viewLifecycleOwner, hideWithAnimObserver)
 
         binding.reload.setOnClickListener {
-            binding.container.removeAllViews()
-            viewModel.restartGame()
-            viewModel.loadImages(level)
-            timerInitAndStart()
+//            binding.container.removeAllViews()
+//            viewModel.restartGame()
+//            viewModel.loadImages(level)
+//            timerInitAndStart()
         }
 
         binding.menu.setOnClickListener {
-            findNavController().popBackStack()
+            backDialog()
         }
 
         binding.level.text = "${MyPref.getInstance().getLevel(level)}"
         levelInt = MyPref.getInstance().getLevel(level)
     }
+
 
     private fun playerSet() {
         player = MyMusicPlayer.getInstance()
@@ -193,10 +192,21 @@ class GameScreen : Fragment(R.layout.screen_game) {
                 image.x = centerX - cardWidth / 2
                 image.y = centerY - cardHeight / 2
 
+                image.isEnabled = false
+
                 image.animate()
                     .setDuration(1000)
                     .x((i * cardWidth) + (margin / 2))
                     .y((j * cardHeight) + (margin / 2))
+                    .withEndAction {
+                        image.openImage {
+                            lifecycleScope.launch {
+                                delay(1500L)
+                                image.closeImage()
+                                image.isEnabled = true
+                            }
+                        }
+                    }
 
                 image.setImageResource(R.drawable.quiz)
 
@@ -207,30 +217,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
                 views.add(image)
             }
         }
-
-        clickEvent()
-    }
-
-    private fun timerInitAndStart() {
-
-        binding.time.text = i.toString()
-
-        val progressBar = binding.horizontalProgressBar
-        progressBar.max = i
-
-        job = lifecycleScope.launch {
-            while (i > 0) {
-                i--
-                progressBar.progress = i
-                binding.time.text = i.toString()
-                if (i == 0) {
-                    Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
-                    showGameOverDialog()
-                    job.cancel()
-                }
-                delay(1000L)
-            }
-        }
     }
 
 
@@ -239,6 +225,30 @@ class GameScreen : Fragment(R.layout.screen_game) {
             imageView.setOnClickListener {
                 if (!canClick) return@setOnClickListener
                 viewModel.checkMatchingCards(imageView.tag as CardData, index)
+            }
+        }
+    }
+
+    private fun progressInit() {
+        binding.time.text = timeTotal.toString()
+
+        val progressBar = binding.horizontalProgressBar
+        progressBar.max = timeTotal
+        progressBar.progress = timeTotal
+    }
+
+    private fun timerInitAndStart() {
+        job = lifecycleScope.launch {
+            while (timeTotal > 0) {
+                timeTotal--
+                binding.horizontalProgressBar.progress = timeTotal
+                binding.time.text = timeTotal.toString()
+                if (timeTotal == 0) {
+                    Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
+                    showGameOverDialog()
+                    job.cancel()
+                }
+                delay(1000L)
             }
         }
     }
@@ -268,7 +278,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
 //            binding.container.removeAllViews()
 
-            i =
+            timeTotal =
                 when (level) {
                     LevelEnum.EASY -> 100
                     LevelEnum.MEDIUM -> 200
@@ -360,6 +370,34 @@ class GameScreen : Fragment(R.layout.screen_game) {
     override fun onStop() {
         MyPref.getInstance().saveLevel(level, levelInt)
         super.onStop()
+    }
+
+    private fun backDialog() {
+        if (::job.isInitialized) job.cancel()
+
+        val dialog = Dialog(requireContext())
+
+        dialog.setContentView(R.layout.dialog_exit)
+
+        dialog.setCancelable(false)
+
+
+
+        dialog.findViewById<TextView>(R.id.yes_exit).setOnClickListener {
+            dialog.dismiss()
+            findNavController().navigateUp()
+        }
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+        dialog.window?.attributes?.gravity = Gravity.CENTER
+
+        dialog.findViewById<TextView>(R.id.no_exit).setOnClickListener {
+            timerInitAndStart()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun setupOnBackPressed() {

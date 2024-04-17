@@ -38,7 +38,7 @@ class ScreenSplash : Fragment(R.layout.screen_splash) {
 
             for (i in 0..100) {
                 binding.loadingProgressBar.progress = i
-                delay(10)
+                delay(7)
             }
 
             findNavController().navigate(ScreenSplashDirections.actionScreenSplashToLevelScreen())
