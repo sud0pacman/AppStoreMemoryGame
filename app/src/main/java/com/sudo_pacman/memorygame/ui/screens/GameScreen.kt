@@ -62,7 +62,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private var levelInt = 1
     private var attempts = 0
     private lateinit var player: MyMusicPlayer
-    private lateinit var  timer: CustomTimer
+    private lateinit var timer: CustomTimer
     private var timeI = 10
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -257,11 +257,10 @@ class GameScreen : Fragment(R.layout.screen_game) {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
 
-        if(isFinish()) {
+        if (isFinish()) {
             dialog.findViewById<TextView>(R.id.tv_next).text = "Next"
             binding.level.text = "${++levelInt}"
-        }
-        else dialog.findViewById<TextView>(R.id.tv_next).text = "Retry"
+        } else dialog.findViewById<TextView>(R.id.tv_next).text = "Retry"
 
 
         dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
@@ -320,7 +319,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
         timer.start()
     }
-
 
 
     private val openObserver = Observer<Int> {
@@ -395,8 +393,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
             Toast.makeText(requireContext(), "Finish", Toast.LENGTH_SHORT).show()
 
             return true
-        }
-        else return false
+        } else return false
     }
 
     override fun onStop() {
@@ -405,7 +402,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
     }
 
     private fun backDialog() {
-        if (::job.isInitialized) job.cancel()
+        if (::timer.isInitialized) timer.pause()
 
         val dialog = Dialog(requireContext())
 
@@ -425,7 +422,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
         dialog.window?.attributes?.gravity = Gravity.CENTER
 
         dialog.findViewById<TextView>(R.id.no_exit).setOnClickListener {
-            timerInitAndStart()
+            timer.resume()
             dialog.dismiss()
         }
 
@@ -436,7 +433,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
-                job.cancel()
+                if (::timer.isInitialized) timer.pause()
 
                 val dialog = Dialog(requireContext())
 
@@ -456,7 +453,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
                 dialog.window?.attributes?.gravity = Gravity.CENTER
 
                 dialog.findViewById<TextView>(R.id.no_exit).setOnClickListener {
-                    timerInitAndStart()
+                    timer.resume()
                     dialog.dismiss()
                 }
 
@@ -465,7 +462,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
         }
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
-
 
 
 }
