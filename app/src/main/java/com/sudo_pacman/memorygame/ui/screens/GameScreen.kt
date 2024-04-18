@@ -9,7 +9,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -29,14 +28,12 @@ import com.sudo_pacman.memorygame.ui.viewmodel.factory.GameViewModelFactory
 import com.sudo_pacman.memorygame.ui.viewmodel.impl.GameViewModelImpl
 import com.sudo_pacman.memorygame.R
 import com.sudo_pacman.memorygame.databinding.ScreenGameBinding
-import com.sudo_pacman.memorygame.utils.CustomTimer
 import com.sudo_pacman.memorygame.utils.MyMusicPlayer
 import com.sudo_pacman.memorygame.utils.MyPref
 import com.sudo_pacman.memorygame.utils.closeImage
 import com.sudo_pacman.memorygame.utils.hideAnim
 import com.sudo_pacman.memorygame.utils.myLog
 import com.sudo_pacman.memorygame.utils.openImage
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -57,13 +54,9 @@ class GameScreen : Fragment(R.layout.screen_game) {
     private var findCards = 0
     private var canClick = true
     private lateinit var level: LevelEnum
-    private lateinit var job: Job
-    private var timeTotal: Int = 5
     private var levelInt = 1
     private var attempts = 0
     private lateinit var player: MyMusicPlayer
-    private lateinit var timer: CustomTimer
-    private var timeI = 10
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         "create".myLog()
@@ -72,15 +65,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
         setupOnBackPressed()
 
         level = navArgs.level
-
-        timeTotal =
-            when (level) {
-                LevelEnum.EASY -> 10
-                LevelEnum.MEDIUM -> 200
-                else -> 300
-            }
-
-        timeI = timeTotal
 
         playerSet()
 
@@ -103,11 +87,9 @@ class GameScreen : Fragment(R.layout.screen_game) {
         }
 
         viewModel.images.onEach {
-            progressInit()
             loadViews(it)
             delay(5000)
             clickEvent()
-            timerInitAndStart()
         }
             .launchIn(lifecycleScope)
 
@@ -119,13 +101,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
         viewModel.hide.observe(viewLifecycleOwner, hideObserver)
         viewModel.hideWithAnim.observe(viewLifecycleOwner, hideWithAnimObserver)
-
-        binding.reload.setOnClickListener {
-//            binding.container.removeAllViews()
-//            viewModel.restartGame()
-//            viewModel.loadImages(level)
-//            timerInitAndStart()
-        }
 
         binding.menu.setOnClickListener {
             backDialog()
@@ -236,7 +211,7 @@ class GameScreen : Fragment(R.layout.screen_game) {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun showGameOverDialog() {
+    private fun showGameOverDialog(isWin: Boolean = false) {
         val dialog = Dialog(requireContext())
 
         binding.container.removeAllViews()
@@ -257,10 +232,14 @@ class GameScreen : Fragment(R.layout.screen_game) {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
 
-        if (isFinish()) {
+        if (isWin) {
+            dialog.findViewById<ImageView>(R.id.ic_win_next).setImageResource(R.drawable.ic_next)
             dialog.findViewById<TextView>(R.id.tv_next).text = "Next"
             binding.level.text = "${++levelInt}"
-        } else dialog.findViewById<TextView>(R.id.tv_next).text = "Retry"
+        } else {
+            dialog.findViewById<ImageView>(R.id.ic_win_next).setImageResource(R.drawable.ic_refresh)
+            dialog.findViewById<TextView>(R.id.tv_next).text = "Retry"
+        }
 
 
         dialog.findViewById<LinearLayout>(R.id.next).setOnClickListener {
@@ -268,57 +247,19 @@ class GameScreen : Fragment(R.layout.screen_game) {
 
             binding.container.removeAllViews()
 
-            timeTotal =
-                when (level) {
-                    LevelEnum.EASY -> 10
-                    LevelEnum.MEDIUM -> 200
-                    else -> 300
-                }
-
-            timeI = timeTotal
-
             lifecycleScope.launch {
                 viewModel.restartGame()
                 viewModel.loadImages(level)
 
                 delay(5000)
-
-                timerInitAndStart()
             }
         }
+
+        attempts = 0
 
         dialog.show()
     }
 
-    private fun progressInit() {
-        binding.time.text = timeTotal.toString()
-
-        val progressBar = binding.horizontalProgressBar
-        progressBar.max = timeTotal
-        progressBar.progress = timeTotal
-    }
-
-    private fun timerInitAndStart() {
-        if (::timer.isInitialized) {
-            timer.stop()
-        }
-
-        timer = CustomTimer(totalTime = timeTotal * 1000L, 1000L)
-
-        timer.setOnTickListener { millisUntilFinished ->
-            timeI = (millisUntilFinished / 1000).toInt() // Convert milliseconds to seconds
-            binding.horizontalProgressBar.progress = timeI
-            binding.time.text = timeI.toString()
-            "Remaining time: $timeI seconds".myLog()
-        }
-
-        timer.setOnFinishListener {
-            Toast.makeText(requireContext(), "Game Over", Toast.LENGTH_SHORT).show()
-            showGameOverDialog()
-        }
-
-        timer.start()
-    }
 
 
     private val openObserver = Observer<Int> {
@@ -383,26 +324,12 @@ class GameScreen : Fragment(R.layout.screen_game) {
     }
 
 
-    private fun isFinish(): Boolean {
-        if (findCards == (x * y) / 2) {
-            job.cancel()
-
-            ++levelInt
-            binding.level.text = "$levelInt"
-            showGameOverDialog()
-            Toast.makeText(requireContext(), "Finish", Toast.LENGTH_SHORT).show()
-
-            return true
-        } else return false
-    }
-
     override fun onStop() {
         MyPref.getInstance().saveLevel(level, levelInt)
         super.onStop()
     }
 
     private fun backDialog() {
-        if (::timer.isInitialized) timer.pause()
 
         val dialog = Dialog(requireContext())
 
@@ -422,18 +349,27 @@ class GameScreen : Fragment(R.layout.screen_game) {
         dialog.window?.attributes?.gravity = Gravity.CENTER
 
         dialog.findViewById<TextView>(R.id.no_exit).setOnClickListener {
-            timer.resume()
             dialog.dismiss()
         }
 
         dialog.show()
     }
 
+    private fun isFinish(): Boolean {
+        return if (findCards == (x * y) / 2) {
+            showGameOverDialog(isWin = true)
+
+            Toast.makeText(requireContext(), "Finish", Toast.LENGTH_SHORT).show()
+
+            true
+        } else false
+    }
+
+
     private fun setupOnBackPressed() {
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
-                if (::timer.isInitialized) timer.pause()
 
                 val dialog = Dialog(requireContext())
 
@@ -453,7 +389,6 @@ class GameScreen : Fragment(R.layout.screen_game) {
                 dialog.window?.attributes?.gravity = Gravity.CENTER
 
                 dialog.findViewById<TextView>(R.id.no_exit).setOnClickListener {
-                    timer.resume()
                     dialog.dismiss()
                 }
 

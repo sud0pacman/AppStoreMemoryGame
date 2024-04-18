@@ -133,6 +133,7 @@
                     android:background="@drawable/bg_card_inner1_blue">
 
                     <ImageView
+                        android:id="@+id/ic_win_next"
                         android:layout_width="32dp"
                         android:layout_height="26dp"
                         android:layout_gravity="center|start"
